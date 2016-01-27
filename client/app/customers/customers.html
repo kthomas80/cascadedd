@@ -1,0 +1,308 @@
+<navbar></navbar>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <h1>{{vm.PageTitle}}</h1>
+            <p>{{vm.PageDescription}}</p>
+        </div>
+    </div>
+	<div class="container-fluid">
+	
+<form class="form-horizontal" role="form" name="orderForm">
+        <div class="col-lg-12">
+            <div class="well well-sm"><strong><span class="glyphicon glyphicon-asterisk"></span>Required Field | Order Locked: {{orderLocked}}</strong></div>
+            /**
+            This should only display ABC Supply
+            **/
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="customers">Customers:</label>
+                <div class="col-sm-10">
+					<ui-select ng-model="vm.selectedCustomerItem" ng-change="getAccountItems(vm.selectedCustomerItem.customer_id)">
+						<ui-select-match>							        
+							<span ng-bind="$select.selected.customer_name"></span>
+						</ui-select-match>
+					    <ui-select-choices repeat="item in (vm.customerItems | filter: $select.search) track by item.customer_id">
+					        <span ng-bind="item.customer_name"></span>
+					    </ui-select-choices>
+					</ui-select>
+                </div>
+            </div><!--end form-group for customers-->
+            /**
+            This should filter the accounts array objects nested
+            in the initial JSON for ABC Supply
+            **/
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="accounts">Accounts:</label>
+                <div class="col-sm-10">
+					<ui-select ng-model="vm.selectedAccountItem" ng-change="getShipToItems(vm.selectedAccountItem.account_id)">
+						<ui-select-match>							        
+							<span ng-bind="$select.selected.account_name"></span>
+						</ui-select-match>
+					    <ui-select-choices repeat="item in (vm.customerItems.accounts | filter: $select.search) track by item.account_id">
+					        <span ng-bind="item.account_name"></span>
+					    </ui-select-choices>
+					</ui-select>
+                </div>
+            </div><!--end form-group for nested accounts-->
+            /**
+            This should filter the addresses array objects nested
+            in the initial JSON for ABC Supply, but specifically for each Account selected
+            ABC Supply --> #244 FREDERICK MD (the 10th object under accounts) --> 1 ORION CT (the 8th object under addresses)
+            **/
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="shiptos">Address:</label>
+                <div class="col-sm-10">
+					<ui-select ng-model="vm.selectedAddressItem">
+						<ui-select-match>							        
+							<span ng-bind="$select.selected.address1"></span>
+						</ui-select-match>
+					    <ui-select-choices repeat="item in (vm.customerItems.accounts.addresses | filter: $select.search) track by item.address_id">
+					        <span ng-bind="item.address1"></span>
+					    </ui-select-choices>
+					</ui-select>
+                </div>
+            </div><!--end form-group for nested accounts-->
+
+			<div class="form-group">
+                <label class="control-label col-sm-2" for="InputPO"><span class="glyphicon glyphicon-asterisk"></span>Purchase Order</label>
+                <div class="col-sm-10">
+                    <!--quoteFormData.purchaseOrder
+                    quoteHeader.header[0].purchaseOrder => {{quoteHeader.header[0].purchaseOrder}}-->
+                    <input type="text"
+                           ng-model="quotePurchaseOrder"
+                           class="form-control col-sm-9"
+                           name="purchaseOrder"
+                           ng-disabled="orderLocked"
+                           ng-minlength=3 ng-maxlength=20 required>
+                    <div class="error-container"
+                         ng-show="orderForm.purchaseOrder.$dirty && orderForm.purchaseOrder.$invalid">
+                        <small class="error"
+                               ng-show="orderForm.purchaseOrder.$error.required">
+                            Purchase Order is required.
+                        </small>
+                        <small class="error"
+                               ng-show="orderForm.purchaseOrder.$error.minlength">
+                            Purchase Order is required to be at least 3 characters
+                        </small>
+                        <small class="error"
+                               ng-show="orderForm.purchaseOrder.$error.purchaseOrder">
+                            That is not a valid Purchase Order. Please input a valid Purchase Order.
+                        </small>
+                        <small class="error"
+                               ng-show="orderForm.purchaseOrder.$error.maxlength">
+                            Your Purchase Order cannot be longer than 20 characters
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="InputCustomer"><span class="glyphicon glyphicon-asterisk"></span>Customer Name</label>
+                <div class="col-sm-10">
+                    <input type="text"
+                           ng-model="quoteCustomerName"
+                           class="form-control"
+                           id="InputCustomerSecond"
+                           name="customerName"
+                           placeholder="Customer"
+                           ng-disabled="orderLocked"
+                           ng-minlength=3 ng-maxlength=20 required>
+                    <div class="error-container"
+                         ng-show="orderForm.customerName.$dirty && orderForm.customerName.$invalid">
+                        <small class="error"
+                               ng-show="orderForm.customerName.$error.required">
+                            Customer Name is required.
+                        </small>
+                        <small class="error"
+                               ng-show="orderForm.customerName.$error.minlength">
+                            Customer Name is required to be at least 3 characters
+                        </small>
+                        <small class="error"
+                               ng-show="orderForm.customerName.$error.customerName">
+                            That is not a valid Customer Name. Please input a valid Customer Name.
+                        </small>
+                        <small class="error"
+                               ng-show="orderForm.customerName.$error.maxlength">
+                            Your Customer Name cannot be longer than 20 characters
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="InputJobName">Job Name</label>
+                <div class="col-sm-10">
+                    <input type="text"
+                           ng-model="quoteJobName"
+                           class="form-control"
+                           id="InputJobNameSecond"
+                           name="InputJobName"
+                           placeholder="Job Name"
+                           required>
+                </div>
+            </div>
+            <!--<div class="form-group">
+                <label class="control-label col-sm-2" for="InputOrderType">Order Type</label>
+                <div class="col-sm-10">
+                    <select class="form-control"
+                            ng-model="quoteFormData.lovOrderTypeSelected"
+                            ng-options="value.id as value.label for value in lovOrderTypes">
+                        <option>--</option>
+                    </select>
+                </div>
+            </div>-->
+            <div class="row">
+                <div class="col-sm-5 col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Pricing:
+                        </div>
+                        <div class="panel-body">
+                            <div>
+                                <div class="checkbox"
+                                     ng-repeat="showListPriceVal in user.userProfile[0].showListPrice[0]">
+                                    <label>
+                                        <input type="checkbox"
+                                               ng-checked="showListPriceVal"
+                                               ng-bind="quoteFormData.showListPrice" />
+                                        Show List Price
+                                    </label>
+                                </div>
+
+                            </div>
+                            <!--<div ng-repeat="user in userProfile">
+                                <div class="checkbox"
+                                     ng-repeat="defaults in user.userDefaults">
+                                    userProfile.userDefaults.Defaults.defaultValue => {{defaults[0].Defaults.defaultValue}}</br>
+                                    <label><input type="checkbox"
+                                                  checked="{{userProfile[0].userDefaults.Defaults.defaultValue}}"
+                                                  ng-bind="quoteFormData.showListPrice">
+                                    </label>
+                                </div>
+                            </div>-->
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           ng-model="quoteFormData.ShowCustomerPrice">Show Customer Price
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           ng-model="quoteFormData.ShowDistributorPrice">Show Distributor Cost
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           ng-model="quoteFormData.ShowPartNumbersPrice">Show Part Numbers on Quote
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-5 col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Cost Calculation for Customer Price:
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+
+                                <!--Cost Plus-->
+
+                                <div class="col-md-6">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox"
+                                                   ng-model="quoteFormData.PriceCostPlus">Cost Plus
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                               ng-model="quoteFormData.PriceCostPlusValue" id="InputJobNameSecond" name="InputJobName">
+                                    </div>
+                                </div>
+
+                                <!--Gross Margin-->
+
+                                <div class="col-md-6">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox"
+                                                   ng-model="quoteFormData.PriceGrossMargin">Gross Margin
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                               ng-model="quoteFormData.PriceGrossMarginValue" id="InputJobNameSecond" name="InputJobName" placeholder="Points">
+                                    </div>
+                                </div>
+
+                                <!--Discount off List-->
+
+                                <div class="col-md-6">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox"
+                                                   ng-model="quoteFormData.PriceDiscOffList">Discount off List
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                               ng-model="quoteFormData.PriceDiscOffListValue" id="InputJobNameSecond" name="InputJobName" placeholder="Percent">
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--Start Special Instructions + buttons-->
+            </div><!--end row-->
+            <div class="row">
+                <div class="col-sm-5 col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Special Instruction
+                        </div>
+                        <div class="panel-body">
+                            <textarea class="form-control"
+                                      ng-model="quoteFormData.SpecialInstructions" rows="5" id="textSpecialInstruction"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="btn-group btn-group-justified" role="group" data-toggle="buttons">                                
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-danger" type="button" ng-click="clearHeader()"><span class="glyphicon remove-ok"></span> Cancel</button>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-primary"
+                                            type="submit"
+                                            ng-click="invokeCreateQuote()">
+                                        <span class="glyphicon glyphicon-ok"></span> Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!--end row-->
+        </div><!--end col-lg-12-->
+    </form>
+
+	</div>
+    
+</div>
+
+<footer></footer>                        

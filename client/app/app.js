@@ -6,7 +6,8 @@ angular.module('cascadeddApp', [
   'ngResource',
   'ngSanitize',
   'ui.router',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'ui.select'
 ])
   .config(function($urlRouterProvider, $locationProvider) {
     $urlRouterProvider
